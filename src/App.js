@@ -1,7 +1,8 @@
 import React from 'react';
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 
 import Button from '@material-ui/core/Button';
+import moment from 'moment';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import FormControl from '@material-ui/core/FormControl';
 import Input from '@material-ui/core/Input';
@@ -10,6 +11,7 @@ import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import withStyles from '@material-ui/core/styles/withStyles';
 import Grid from '@material-ui/core/Grid';
+
 const styles = theme => ({
   main: {
     width: 'auto',
@@ -58,13 +60,21 @@ class App extends React.Component {
   handleClick = e => {
     e.preventDefault();
     if (this.state.zip === '') return;
+    if (this.state.zip.length < 5) {
+      alert('Please enter a valid zipcode');
+      return;
+    }
+    let zipcodeTest = Number(this.state.zip);
+    if (isNaN(zipcodeTest)) {
+      alert('Please enter a valid zipcode');
+      return;
+    }
 
     fetch('http://api.openweathermap.org/data/2.5/weather?zip=' + this.state.zip + ',us&APPID=09cf8b76fde0210ec225a3bf23ccfdc0&units=imperial')
       .then(response => {
         return response.json();
       })
       .then(currentData => {
-        console.log(currentData);
         let currentTemp = currentData.main.temp;
         if (currentData.weather) {
           this.setState({ weather0: currentData.weather[0].description });
@@ -78,11 +88,33 @@ class App extends React.Component {
       });
 
     // Five Day Forcast
-    fetch('http://api.openweathermap.org/data/2.5/forecast?zip=' + this.state.zip + ',us&APPID=09cf8b76fde0210ec225a3bf23ccfdc0')
+    fetch('http://api.openweathermap.org/data/2.5/forecast?zip=' + this.state.zip + ',us&APPID=09cf8b76fde0210ec225a3bf23ccfdc0&units=imperial')
       .then(response => {
         return response.json();
       })
       .then(forecastData => {
+        forecastData = forecastData.list
+          .map(function(item) {
+            // Got the date and used Moment to generate the Weekday in order for the day to be nicely displayed in the UI of the 5 day forecast.
+            let m = moment(item.dt_txt.split(' ')[0], 'YYYY-MM-DD');
+            m = m.format('dddd');
+            return {
+              day_of_week: m,
+              dt_txt: item.dt_txt,
+              weather: item.weather,
+              main: item.main,
+            };
+          })
+          .filter(data => {
+            // console.log(data.dt_txt);
+            // Mapped the forcast data that I needed, I filtered to return only the weather // timestamped with 00:00:00
+            let dttext = data.dt_txt.split(' ');
+            console.log(dttext);
+            let time = dttext[1];
+            if (time === '00:00:00') {
+              return data;
+            }
+          });
         this.setState({ forecast: forecastData });
       });
   };
@@ -93,7 +125,7 @@ class App extends React.Component {
       <Grid className='App'>
         <main className={classes.main}>
           <CssBaseline />
-          <Paper className={classes.paper}>
+          <Paper className={classes.paper} id='MainTop'>
             <Typography component='h1' variant='h5'>
               Weather App
             </Typography>
@@ -168,11 +200,32 @@ class App extends React.Component {
             ) : (
               ''
             )}
+            <Grid xs={12}>
+              <h1>{this.state.forecast ? `Your 5 Day Weather Forecast` : ''}</h1>
+            </Grid>
+            {this.state.forecast
+              ? this.state.forecast.map(day => (
+                  <Grid item xs={4} sm={4}>
+                    <Paper className={classes.paper}>
+                      <h2>{day.day_of_week}</h2>
+                      <h3>
+                        Temp
+                        <br />
+                        {day.main.temp}
+                        {/* adds symbol for farenheight  */}
+                        <span>&#8457;</span>
+                      </h3>
+                      {/* <h3>Humidity: {forecast.main}</h3> */}
+                    </Paper>
+                  </Grid>
+                ))
+              : null}
           </Grid>
         </main>
       </Grid>
     );
   }
 }
+//Five day / Three Hour Forcast Data:
 
 export default withStyles(styles)(App);
