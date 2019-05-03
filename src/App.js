@@ -122,7 +122,7 @@ class App extends React.Component {
   render() {
     const { classes } = this.props;
     return (
-      <Grid className='App'>
+      <Grid className='App' alignItems='center'>
         <main className={classes.main}>
           <CssBaseline />
           <Paper className={classes.paper} id='MainTop'>
@@ -139,15 +139,15 @@ class App extends React.Component {
               </Button>
             </form>
           </Paper>
-          <Grid container className={classes.root} spacing={16}>
-            <Grid item xs={12}>
+          <Grid container className={classes.root} spacing={16} alignItems='center'>
+            <Grid item xs={12} alignItems='center'>
               <h1>{this.state.current ? this.state.current.name : ''}</h1>
             </Grid>
             {this.state.current_temp ? (
-              <Grid item xs={4}>
+              <Grid item xs={4} alignItems='center'>
                 <Paper className={classes.paper} m={0}>
-                  <Grid container>
-                    <Grid item>
+                  <Grid container alignItems='center'>
+                    <Grid item style={{ textAlign: 'center' }}>
                       Current Temp <br />
                       <h2>
                         {this.state.current ? this.state.current.main.temp : ''}
